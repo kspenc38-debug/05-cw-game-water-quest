@@ -1,9 +1,23 @@
-const GOAL_CANS = 20;
-const ROUND_LENGTH = 30;
 const MILESTONES = [5, 10, 15];
+const difficultySettings = {
+  easy: {
+    targetScore: 10,
+    time: 45,
+  },
+  medium: {
+    targetScore: 20,
+    time: 30,
+  },
+  hard: {
+    targetScore: 30,
+    time: 20,
+  }
+};
 
 let currentCans = 0;
-let timeLeft = ROUND_LENGTH;
+let targetScore = 20;
+let timeLeft = 30;
+let selectedDifficulty = 'medium';
 let gameActive = false;
 let spawnInterval = null;
 let timerInterval = null;
@@ -41,8 +55,8 @@ function spawnWaterCan() {
 function updateScore() {
   scoreDisplay.textContent = currentCans;
 
-  if (currentCans >= GOAL_CANS) {
-    messageDisplay.textContent = 'Goal reached! You collected 20 cans!';
+  if (currentCans >= targetScore) {
+    messageDisplay.textContent = `Goal reached! You collected ${targetScore} cans!`;
     endGame();
     return;
   }
@@ -58,7 +72,7 @@ function startGame() {
   if (gameActive) return;
 
   currentCans = 0;
-  timeLeft = ROUND_LENGTH;
+  timeLeft = difficultySettings[selectedDifficulty].time;
   gameActive = true;
   scoreDisplay.textContent = currentCans;
   timerDisplay.textContent = timeLeft;
@@ -77,6 +91,50 @@ function startGame() {
       endGame();
     }
   }, 1000);
+}
+
+const difficultyButtons = document.querySelectorAll('.difficulty');
+
+difficultyButtons.forEach((button) => {
+  button.addEventListener('click', () => {
+    const difficulty = button.dataset.difficulty;
+    selectedDifficulty = difficulty;
+    targetScore = difficultySettings[difficulty].targetScore;
+    timeLeft = difficultySettings[difficulty].time;
+
+    document.getElementById("timer").textContent = timeLeft;
+    document.querySelector(".game-instructions").textContent = `Collect ${targetScore} cans to complete the game!`;
+
+    difficultyButtons.forEach((item) => {
+      item.classList.remove('active');
+    });
+    button.classList.add('active');
+  });
+});
+
+const gameGrid = document.querySelector('.game-grid');
+const canCountDisplay = document.getElementById('current-cans');
+
+function createCan() {
+  const can = document.createElement("button");
+  can.classList.add("water-can");
+  can.textContent = "Can";
+
+  can.addEventListener("click", () => collectCan(can));
+
+  gameGrid.appendChild(can);
+}
+
+function collectCan(can) {
+  currentCans++;
+  canCountDisplay.textContent = currentCans;
+
+  can.classList.add("collected");
+  setTimeout(() => can.remove(), 300);
+
+  if (currentCans >= targetScore) {
+    endGame(true);
+  }
 }
 
 function endGame() {
